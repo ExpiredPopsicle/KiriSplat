@@ -16,6 +16,9 @@ export(float) var depth = 2.0 setget set_depth
 export(Material) var material = \
 	preload("KiriSplat_defaultMaterial.tres") setget set_material
 
+# ----------------------------------------------------------------------
+# Getters/Setters
+
 func set_material(newMaterial):
 	material = newMaterial
 	call_deferred("rescan_all_nodes")
@@ -34,6 +37,9 @@ func set_depth(newDepth):
 	depth = newDepth
 	call_deferred("rescan_all_nodes")
 	update_gizmo()
+
+# ----------------------------------------------------------------------
+# Triangle collision test functions
 
 func _test_triangle_project_box(dir):
 
@@ -131,6 +137,9 @@ func _test_triangle(tri):
 
 	# No separating axis found. Guess we're done here.
 	return true
+
+# ----------------------------------------------------------------------
+# Geometry generation functions
 
 func _scan_nodes(node):
 	
@@ -255,9 +264,6 @@ func _scan_nodes(node):
 		
 		_scan_nodes(child)
 
-func rescanAllNodes():
-	rescan_all_nodes()
-
 func rescan_all_nodes():
 
 	# Clear out existing triangle data.
@@ -304,6 +310,9 @@ func rescan_all_nodes():
 	# Set the last transform so we know the next time something moves and we
 	# need to update.
 	lastTransform = get_global_transform()
+
+# ----------------------------------------------------------------------
+# Engine stuff
 
 # Called when the node enters the scene tree for the first time.
 func _ready():

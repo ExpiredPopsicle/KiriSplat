@@ -1,14 +1,11 @@
 extends EditorSpatialGizmoPlugin
 
 var handles
-var editor_interface = null
 
-# Called when the node enters the scene tree for the first time.
 func _ready():
-	print("GIZMO READY")
+	pass
 
 func _init():
-	print("GIZMO INIT")
 	create_material("main", Color(0.5, 0.5, 1.0))
 	create_handle_material("handles")
 
@@ -16,23 +13,17 @@ func get_name():
 	return "KiriSplatInstance"
 
 func has_gizmo(spatial):
-	print("HAS GIZMO")
-	#if not (spatial in editor_interface.get_selection()):
-	#	return false
 	return spatial is KiriSplatInstance
 
 func redraw(gizmo):
 	gizmo.clear()
-	
-	print("REDRAW")
-	
+
 	var node = gizmo.get_spatial_node()
-	
-	#if not node in editor_interface.get_selection():
-	#	return
-	
+
+	# Manually create a bounding box display.
+
 	var lines = PoolVector3Array()
-	
+
 	var left   = -node.width / 2.0
 	var right  = node.width / 2.0
 	var bottom = -node.height / 2.0
@@ -79,11 +70,9 @@ func redraw(gizmo):
 	lines.push_back(Vector3(right, top, front))
 	lines.push_back(Vector3(right, bottom, front))
 
-
 	gizmo.add_lines(lines, get_material("main", gizmo), false)
-	
-	
-	
+
+	# Create handles. Order matters here (assumed order in set_handle()).
 	handles = PoolVector3Array()
 	handles.push_back(Vector3(left, 0.0, 0.0))
 	handles.push_back(Vector3(right, 0.0, 0.0))
@@ -93,14 +82,9 @@ func redraw(gizmo):
 	handles.push_back(Vector3(0.0, 0.0, back))
 	
 	gizmo.add_handles(handles, get_material("handles", gizmo), false)
-	
-	print("GIZMO REDRAW")
 
 func commit_handle(gizmo, index, restore, cancel = false):
 	print("COMMIT_HANDLE: ", index, " ", get_handle_value(gizmo, index))
-
-#func set_handle(gizmo, index, camera, point):
-#	print("SET_HANDLE: ", index, " ", get_handle_value(gizmo, index), " ", point)
 
 func set_handle(gizmo, index, camera, point):
 
@@ -131,17 +115,11 @@ func set_handle(gizmo, index, camera, point):
 	var newObjSpace = gizmo.get_spatial_node().get_global_transform().affine_inverse() * newWorldPos
 	print("Obj space (new): ", newObjSpace)
 
+	# Set the width/height/depth based on the new value just for the
+	# corresponding axis in the reprojected position.
 	if index == 0 || index == 1:
-		print("New width: ", abs(newObjSpace.x) * 2.0)
 		gizmo.get_spatial_node().set_width(abs(newObjSpace.x) * 2.0)
 	if index == 2 || index == 3:
-		print("New height: ", abs(newObjSpace.y) * 2.0)
 		gizmo.get_spatial_node().set_height(abs(newObjSpace.y) * 2.0)
 	if index == 4 || index == 5:
-		print("New depth: ", abs(newObjSpace.z) * 2.0)
 		gizmo.get_spatial_node().set_depth(abs(newObjSpace.z) * 2.0)
-
-	
-
-	#camera.project_position(point, )
-	
