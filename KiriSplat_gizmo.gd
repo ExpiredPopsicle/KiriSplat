@@ -83,43 +83,29 @@ func redraw(gizmo):
 	
 	gizmo.add_handles(handles, get_material("handles", gizmo), false)
 
-func commit_handle(gizmo, index, restore, cancel = false):
-	print("COMMIT_HANDLE: ", index, " ", get_handle_value(gizmo, index))
+func set_handle(gizmo, index, camera, new_screenspace_point):
 
-func set_handle(gizmo, index, camera, point):
-
-	print("SET_HANDLE: ", index, " ", point)
-	
-	var worldPos = \
+	# Get the original view space position just so we have a depth value to work
+	# with.
+	var original_world_pos = \
 		gizmo.get_spatial_node().get_global_transform() * handles[index]
+	var original_viewspace_pos = \
+		camera.get_camera_transform().affine_inverse() * original_world_pos
 
-	print("Original world pos:  ",
-		worldPos)
-
-	var unprojected = camera.unproject_position(worldPos)
-	var cameraSpace = camera.get_camera_transform().affine_inverse() * worldPos
-
-	print("Original screen pos: ",
-		unprojected)
-
-	print("New screen pos:      ",
-		point)
-
-	var newWorldPos = camera.project_position(
-		#Vector2(unprojected.x, unprojected.y),
-		point,
-		-cameraSpace.z)
-	print("New world pos:       ", newWorldPos)
-
-	print("Obj space (old): ", handles[index])
-	var newObjSpace = gizmo.get_spatial_node().get_global_transform().affine_inverse() * newWorldPos
-	print("Obj space (new): ", newObjSpace)
+	# Project the screen point out to the depth we got from the view space
+	# position, and convert it back into object space.
+	var new_world_pos = camera.project_position(
+		new_screenspace_point,
+		-original_viewspace_pos.z)
+	var new_objectspace_pos = \
+		gizmo.get_spatial_node().get_global_transform().affine_inverse() * \
+		new_world_pos
 
 	# Set the width/height/depth based on the new value just for the
 	# corresponding axis in the reprojected position.
 	if index == 0 || index == 1:
-		gizmo.get_spatial_node().set_width(abs(newObjSpace.x) * 2.0)
+		gizmo.get_spatial_node().set_width(abs(new_objectspace_pos.x) * 2.0)
 	if index == 2 || index == 3:
-		gizmo.get_spatial_node().set_height(abs(newObjSpace.y) * 2.0)
+		gizmo.get_spatial_node().set_height(abs(new_objectspace_pos.y) * 2.0)
 	if index == 4 || index == 5:
-		gizmo.get_spatial_node().set_depth(abs(newObjSpace.z) * 2.0)
+		gizmo.get_spatial_node().set_depth(abs(new_objectspace_pos.z) * 2.0)
