@@ -134,12 +134,10 @@ func _test_triangle(tri):
 
 func _scan_nodes(node):
 	
-	print("RESCAN")
-	
 	var my_transform_worldspace = get_global_transform()
 	
 	# Create a world space AABB to represent the area covered by the splat.
-	var my_aabb_worldspace = get_global_transform().xform(AABB(
+	var my_aabb_worldspace = my_transform_worldspace.xform(AABB(
 		Vector3(-width/2.0, -height/2.0, -depth/2.0),
 		Vector3(width, height, depth)))
 
@@ -159,35 +157,33 @@ func _scan_nodes(node):
 	if node is MeshInstance:
 		mesh_transform_worldspace = node.get_global_transform()
 		meshMesh = node.mesh
-		
+
 	if meshMesh != null:
-		
+
 		# Get the mesh's AABB in world space.
 		var mesh_aabb_worldspace = mesh_transform_worldspace.xform(meshMesh.get_aabb())
-		
+
 		if mesh_aabb_worldspace.intersects(my_aabb_worldspace):
-#			print("INTERSECTION")
-#
-#			print("  Surfacecount: ", meshMesh.get_surface_count())
-			
+
 			for surfaceIndex in range(0, meshMesh.get_surface_count()):
-				
+
 				# FIXME: Add support for fans, strips, and quads.
 				if meshMesh is ArrayMesh:
 					if meshMesh.surface_get_primitive_type(surfaceIndex) != Mesh.PRIMITIVE_TRIANGLES:
 						continue
-				
+
 				var surfaceArrays = meshMesh.surface_get_arrays(surfaceIndex)
-				
+
 				# Create a matrix that'll go straight from the mesh's coordinate
 				# space to our own coordinate space, so we can quickly shuffle
 				# triangles into (local) position.
-				#print("SCALE: ", my_transform_worldspace.)
-				var meshTransform2 = my_transform_worldspace.affine_inverse() * mesh_transform_worldspace
-				#meshTransform2 = meshTransform2 * my_transform_worldspace.scaled()
+				var mesh_transform_to_my_transform_worldspace = \
+					my_transform_worldspace.affine_inverse() * \
+					mesh_transform_worldspace
 				
 				var meshTransformRotation = Transform(
-					meshTransform2.basis, Vector3(0.0, 0.0, 0.0))
+					mesh_transform_to_my_transform_worldspace.basis,
+					Vector3(0.0, 0.0, 0.0))
 				
 				# FIXME: The code below has a lot of redundancy that can be
 				# pulled out.
@@ -205,9 +201,9 @@ func _scan_nodes(node):
 						var idx2 = surfaceArrays[ArrayMesh.ARRAY_INDEX][i+2]
 
 						var verts = PoolVector3Array([
-							meshTransform2 * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx0],
-							meshTransform2 * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx1],
-							meshTransform2 * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx2]])
+							mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx0],
+							mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx1],
+							mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx2]])
 
 						if _test_triangle(verts):
 
@@ -239,9 +235,9 @@ func _scan_nodes(node):
 						var idx2 = i + 2
 						
 						var verts = PoolVector3Array([
-							meshTransform2 * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx0],
-							meshTransform2 * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx1],
-							meshTransform2 * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx2]])
+							mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx0],
+							mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx1],
+							mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx2]])
 
 						if _test_triangle(verts):
 
@@ -284,11 +280,13 @@ func _scan_nodes(node):
 		_scan_nodes(child)
 
 func rescanAllNodes():
-	
+
+	# Clear out existing triangle data.
 	splattableTriangleVerts = PoolVector3Array()
 	splattableTriangleNormals = PoolVector3Array()
 	splattableTriangleUVs = PoolVector2Array()
 
+	# Scan all the existing nodes.
 	if get_tree() != null:
 		var nodesInSplatGroup = get_tree().get_nodes_in_group("splattable")
 		for node in nodesInSplatGroup:
@@ -301,7 +299,9 @@ func rescanAllNodes():
 		i.queue_free()
 
 	if len(splattableTriangleVerts):
-	
+
+		# Assemble all the individual array data together and add it to the mesh
+		# as a surface.
 		var newArrayMesh = ArrayMesh.new()
 		var newArrayMeshArrays = []
 		newArrayMeshArrays.resize(Mesh.ARRAY_MAX)
@@ -310,18 +310,20 @@ func rescanAllNodes():
 		newArrayMeshArrays[Mesh.ARRAY_TEX_UV] = splattableTriangleUVs
 		newArrayMesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, newArrayMeshArrays)
 
+		# Assign the material to this surface.
 		var materialInstance = material.duplicate()
 		if materialInstance is ShaderMaterial:
 			materialInstance.set_shader_param("splat_height", height)
 		var newMeshInstance = MeshInstance.new()
 		newMeshInstance.set_mesh(newArrayMesh)
 		newMeshInstance.set_surface_material(0, materialInstance)
-		
-		add_child(newMeshInstance)
-	
-	# TODO: Show/update the bounding box.
-	var gizmo = get_gizmo()
 
+		# Add mesh the instance to the tree. We're not going to set the owner,
+		# though, because we don't want to clutter up the tree in the editor.
+		add_child(newMeshInstance)
+
+	# Set the last transform so we know the next time something moves and we
+	# need to update.
 	lastTransform = get_global_transform()
 
 # Called when the node enters the scene tree for the first time.
@@ -329,21 +331,15 @@ func _ready():
 	call_deferred("rescanAllNodes")
 	set_notify_transform(true)
 	set_notify_local_transform(true)
-	set_process(true)
-	#set_process_internal(true)
 
-func _process(_delta):
-	#if lastTransform != get_global_transform():
-	#	rescanAllNodes()
-	pass
+#func _process(_delta):
+#	pass
 
 func _notification(what):
-	#print(int(what))
 	if what == NOTIFICATION_TRANSFORM_CHANGED:
 		call_deferred("rescanAllNodes")
 	if what == NOTIFICATION_TRANSLATION_CHANGED:
 		call_deferred("rescanAllNodes")
-	pass
 
 # FIXME: Ugly hack that lets us rescan in the editor when the transform changes.
 func _get_configuration_warning():
