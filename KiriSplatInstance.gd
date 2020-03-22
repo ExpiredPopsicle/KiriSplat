@@ -274,12 +274,12 @@ func _scan_nodes(node):
 func rescan_all_nodes():
 
 	# Clear out existing triangle data.
-	splattableTriangleVerts = PoolVector3Array()
+	splattableTriangleVerts   = PoolVector3Array()
 	splattableTriangleNormals = PoolVector3Array()
-	splattableTriangleUVs = PoolVector2Array()
+	splattableTriangleUVs     = PoolVector2Array()
 
 	# Scan all the existing nodes.
-	if get_tree() != null:
+	if is_inside_tree():
 		var nodesInSplatGroup = get_tree().get_nodes_in_group("splattable")
 		for node in nodesInSplatGroup:
 			_scan_nodes(node)
@@ -316,7 +316,10 @@ func rescan_all_nodes():
 
 	# Set the last transform so we know the next time something moves and we
 	# need to update.
-	lastTransform = get_global_transform()
+	if is_inside_tree():
+		lastTransform = get_global_transform()
+	else:
+		lastTransform = Transform()
 
 # ----------------------------------------------------------------------
 # Engine stuff
