@@ -18,21 +18,21 @@ export(Material) var material = \
 
 func set_material(newMaterial):
 	material = newMaterial
-	call_deferred("rescanAllNodes")
+	call_deferred("rescan_all_nodes")
 
 func set_width(newWidth):
 	width = newWidth
-	call_deferred("rescanAllNodes")
+	call_deferred("rescan_all_nodes")
 	update_gizmo()
 
 func set_height(newHeight):
 	height = newHeight
-	call_deferred("rescanAllNodes")
+	call_deferred("rescan_all_nodes")
 	update_gizmo()
 
 func set_depth(newDepth):
 	depth = newDepth
-	call_deferred("rescanAllNodes")
+	call_deferred("rescan_all_nodes")
 	update_gizmo()
 
 func _test_triangle_project_box(dir):
@@ -188,13 +188,16 @@ func _scan_nodes(node):
 				# FIXME: The code below has a lot of redundancy that can be
 				# pulled out.
 				
-				# Handle indexed arrays.
+				var vertCount = len(surfaceArrays[ArrayMesh.ARRAY_VERTEX])
 				if surfaceArrays[ArrayMesh.ARRAY_INDEX]:
+					vertCount = len(surfaceArrays[ArrayMesh.ARRAY_INDEX])
 
-					var vertCount = len(surfaceArrays[ArrayMesh.ARRAY_INDEX])
-					var i = 0
+				var i = 0
 
-					while i < vertCount:
+				# Handle indexed arrays.
+				while i < vertCount:
+
+					if surfaceArrays[ArrayMesh.ARRAY_INDEX]:
 
 						var idx0 = surfaceArrays[ArrayMesh.ARRAY_INDEX][i]
 						var idx1 = surfaceArrays[ArrayMesh.ARRAY_INDEX][i+1]
@@ -223,13 +226,8 @@ func _scan_nodes(node):
 
 						i = i + 3
 						
-				else:
-
-					var vertCount = len(surfaceArrays[ArrayMesh.ARRAY_VERTEX])
-					var i = 0
+					else:
 					
-					while i < vertCount:
-
 						var idx0 = i
 						var idx1 = i + 1
 						var idx2 = i + 2
@@ -280,6 +278,9 @@ func _scan_nodes(node):
 		_scan_nodes(child)
 
 func rescanAllNodes():
+	rescan_all_nodes()
+
+func rescan_all_nodes():
 
 	# Clear out existing triangle data.
 	splattableTriangleVerts = PoolVector3Array()
@@ -328,7 +329,7 @@ func rescanAllNodes():
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	call_deferred("rescanAllNodes")
+	call_deferred("rescan_all_nodes")
 	set_notify_transform(true)
 	set_notify_local_transform(true)
 
@@ -337,14 +338,14 @@ func _ready():
 
 func _notification(what):
 	if what == NOTIFICATION_TRANSFORM_CHANGED:
-		call_deferred("rescanAllNodes")
+		call_deferred("rescan_all_nodes")
 	if what == NOTIFICATION_TRANSLATION_CHANGED:
-		call_deferred("rescanAllNodes")
+		call_deferred("rescan_all_nodes")
 
 # FIXME: Ugly hack that lets us rescan in the editor when the transform changes.
 func _get_configuration_warning():
 	# FIXME: Global transform.
 	if lastTransform != get_global_transform():
-		rescanAllNodes()
+		call_deferred("rescan_all_nodes")
 	return ""
 
