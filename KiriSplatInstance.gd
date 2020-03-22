@@ -1,3 +1,10 @@
+# ----------------------------------------------------------------------
+# KiriSplat
+# Copyright 2020 Kiri Jolly
+# ----------------------------------------------------------------------
+
+# Main splat instance implementation.
+
 tool
 extends Spatial
 class_name KiriSplatInstance

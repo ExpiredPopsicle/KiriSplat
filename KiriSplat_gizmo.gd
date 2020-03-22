@@ -1,3 +1,10 @@
+# ----------------------------------------------------------------------
+# KiriSplat
+# Copyright 2020 Kiri Jolly
+# ----------------------------------------------------------------------
+
+# Editor gizmo implementation.
+
 extends EditorSpatialGizmoPlugin
 
 var handles
