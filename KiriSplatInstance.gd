@@ -184,10 +184,8 @@ func _scan_nodes(node):
 				var meshTransformRotation = Transform(
 					mesh_transform_to_my_transform_worldspace.basis,
 					Vector3(0.0, 0.0, 0.0))
-				
-				# FIXME: The code below has a lot of redundancy that can be
-				# pulled out.
-				
+
+				# Vertex count is different for indexed vs non-indexed meshes.
 				var vertCount = len(surfaceArrays[ArrayMesh.ARRAY_VERTEX])
 				if surfaceArrays[ArrayMesh.ARRAY_INDEX]:
 					vertCount = len(surfaceArrays[ArrayMesh.ARRAY_INDEX])
@@ -197,63 +195,43 @@ func _scan_nodes(node):
 				# Handle indexed arrays.
 				while i < vertCount:
 
+					var idx0
+					var idx1
+					var idx2
+
+					# Vertex indices are different for indexed vs non-indexed
+					# meshes.
 					if surfaceArrays[ArrayMesh.ARRAY_INDEX]:
-
-						var idx0 = surfaceArrays[ArrayMesh.ARRAY_INDEX][i]
-						var idx1 = surfaceArrays[ArrayMesh.ARRAY_INDEX][i+1]
-						var idx2 = surfaceArrays[ArrayMesh.ARRAY_INDEX][i+2]
-
-						var verts = PoolVector3Array([
-							mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx0],
-							mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx1],
-							mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx2]])
-
-						if _test_triangle(verts):
-
-							var normals = PoolVector3Array([
-								meshTransformRotation * surfaceArrays[ArrayMesh.ARRAY_NORMAL][idx0],
-								meshTransformRotation * surfaceArrays[ArrayMesh.ARRAY_NORMAL][idx1],
-								meshTransformRotation * surfaceArrays[ArrayMesh.ARRAY_NORMAL][idx2]])
-								
-							var UVs = PoolVector2Array([
-								Vector2(verts[0].x / width + 0.5, verts[0].z / depth + 0.5),
-								Vector2(verts[1].x / width + 0.5, verts[1].z / depth + 0.5),
-								Vector2(verts[2].x / width + 0.5, verts[2].z / depth + 0.5)])
-	
-							splattableTriangleVerts = splattableTriangleVerts + verts
-							splattableTriangleNormals = splattableTriangleNormals + normals
-							splattableTriangleUVs = splattableTriangleUVs + UVs
-
-						i = i + 3
-						
+						idx0 = surfaceArrays[ArrayMesh.ARRAY_INDEX][i]
+						idx1 = surfaceArrays[ArrayMesh.ARRAY_INDEX][i+1]
+						idx2 = surfaceArrays[ArrayMesh.ARRAY_INDEX][i+2]
 					else:
-					
-						var idx0 = i
-						var idx1 = i + 1
-						var idx2 = i + 2
-						
-						var verts = PoolVector3Array([
-							mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx0],
-							mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx1],
-							mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx2]])
+						idx0 = i
+						idx1 = i + 1
+						idx2 = i + 2
 
-						if _test_triangle(verts):
+					var verts = PoolVector3Array([
+						mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx0],
+						mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx1],
+						mesh_transform_to_my_transform_worldspace * surfaceArrays[ArrayMesh.ARRAY_VERTEX][idx2]])
 
-							var normals = PoolVector3Array([
-								meshTransformRotation * surfaceArrays[ArrayMesh.ARRAY_NORMAL][idx0],
-								meshTransformRotation * surfaceArrays[ArrayMesh.ARRAY_NORMAL][idx1],
-								meshTransformRotation * surfaceArrays[ArrayMesh.ARRAY_NORMAL][idx2]])
+					if _test_triangle(verts):
 
-							var UVs = PoolVector2Array([
-								Vector2(verts[0].x / width + 0.5, verts[0].z / depth + 0.5),
-								Vector2(verts[1].x / width + 0.5, verts[1].z / depth + 0.5),
-								Vector2(verts[2].x / width + 0.5, verts[2].z / depth + 0.5)])
-	
-							splattableTriangleVerts = splattableTriangleVerts + verts
-							splattableTriangleNormals = splattableTriangleNormals + normals
-							splattableTriangleUVs = splattableTriangleUVs + UVs
+						var normals = PoolVector3Array([
+							meshTransformRotation * surfaceArrays[ArrayMesh.ARRAY_NORMAL][idx0],
+							meshTransformRotation * surfaceArrays[ArrayMesh.ARRAY_NORMAL][idx1],
+							meshTransformRotation * surfaceArrays[ArrayMesh.ARRAY_NORMAL][idx2]])
+							
+						var UVs = PoolVector2Array([
+							Vector2(verts[0].x / width + 0.5, verts[0].z / depth + 0.5),
+							Vector2(verts[1].x / width + 0.5, verts[1].z / depth + 0.5),
+							Vector2(verts[2].x / width + 0.5, verts[2].z / depth + 0.5)])
 
-						i = i + 3
+						splattableTriangleVerts = splattableTriangleVerts + verts
+						splattableTriangleNormals = splattableTriangleNormals + normals
+						splattableTriangleUVs = splattableTriangleUVs + UVs
+
+					i = i + 3
 
 	# Recurse into children.
 	var childNodes = node.get_children()

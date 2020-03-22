@@ -31,11 +31,25 @@ Add the new mesh object to the "splattable" group. Under the *Node*
 tab, enter the *Groups* tab. Type "splattable" in the text field next
 to the *Add* button and then click the *Add* button.
 
-Move the splat object so that its bounding box covers the mesh.
+Move the splat object so that its bounding box covers the mesh. The
+splat should appear on the mesh.
+
+## Splat mesh updates
 
 Note that splats only update when they move, so if a "splattable"
 object moves into it, it will not show up with the splat until the
-splat itself moves.
+splat itself moves. Manually calling **rescan_all_nodes()** can force
+a splat to update with new geometry.
+
+## "splattable" and "not_splattable" groups
+
+All objects in the "splattable" group *and their children* will be
+scanned for usable mesh data.
+
+If you want to add a mesh as a child of a "splattable" object and
+*not* have it receive splats, simply use the "not_splattable" group.
+By setting this group, the object and its children will not be
+considered for splat geometry generation.
 
 ## Changing the material
 
