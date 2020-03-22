@@ -64,3 +64,27 @@ center plane. The example shader also manually clamps the edges of the
 splat, and shifts the vertices slightly towards the camera so it
 consistently renders in front of the source geometry.
 
+## Gotchas and performance notes
+
+Splats, once created, will not use any more processing power than a
+normal MeshInstance so long as they are not moved or otherwise forced
+to update.
+
+Splat creation and updating, on the other hand, can be very expensive,
+especially for large scenes. Because splattable objects may not have
+collision areas associated with them (and having to create them for
+every object was considered too burdensome), there is no way to query
+the scene for all the meshes of a given group in a given area without
+just going through and checking for AABB overlaps with every
+"splattable" mesh in the scene. Consider this when making dynamic
+splats.
+
+I'd really love to fix these performance concerns in the future, and
+have some kind of reasonable middle ground between what the plugin
+does now (querying AABBs of all the mesh nodes of any splattable
+object and its children) and a more optimal approach with an efficient
+broad-phase, but with minimal impact on the environment workflow.
+
+Well, decals are on the Godot 4.x roadmap anyway, so hopefully we'll
+have it before that even becomes a real concern.
+
