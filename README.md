@@ -51,6 +51,10 @@ If you want to add a mesh as a child of a "splattable" object and
 By setting this group, the object and its children will not be
 considered for splat geometry generation.
 
+If you don't want to go around tagging every single object as
+"splattable", just make a singke "splattable" node parent for your
+splattable environment objects.
+
 ## Changing the material
 
 The *material* variable on the splat object can be set to an arbitrary
@@ -88,3 +92,10 @@ broad-phase, but with minimal impact on the environment workflow.
 Well, decals are on the Godot 4.x roadmap anyway, so hopefully we'll
 have it before that even becomes a real concern.
 
+For now, dynamic splats may only be reasonable for extremely simple
+scenes, and for more complex scenes, even static splat placement may
+get painfully slow as the scene grows in complexity.
+
+If anyone has tips on quickly querying the scene for overlapping
+meshes in a way that doesn't clutter up the work area with tons of
+additional volumes or collision bodies, I'm definitely listening!
