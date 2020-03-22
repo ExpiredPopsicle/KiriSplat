@@ -18,7 +18,7 @@ export(Material) var material = \
 
 func set_material(newMaterial):
 	material = newMaterial
-	rescanAllNodes()
+	call_deferred("rescanAllNodes")
 
 func set_width(newWidth):
 	width = newWidth
@@ -132,7 +132,7 @@ func _test_triangle(tri):
 	# No separating axis found. Guess we're done here.
 	return true
 
-func scan_nodes(node):
+func _scan_nodes(node):
 	
 	print("RESCAN")
 	
@@ -281,7 +281,7 @@ func scan_nodes(node):
 		if child.get_class() == get_class():
 			continue
 		
-		scan_nodes(child)
+		_scan_nodes(child)
 
 func rescanAllNodes():
 	
@@ -292,7 +292,7 @@ func rescanAllNodes():
 	if get_tree() != null:
 		var nodesInSplatGroup = get_tree().get_nodes_in_group("splattable")
 		for node in nodesInSplatGroup:
-			scan_nodes(node)
+			_scan_nodes(node)
 
 	# Delete old children.
 	var childList = get_children()
