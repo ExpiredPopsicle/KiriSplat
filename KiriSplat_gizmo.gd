@@ -90,6 +90,8 @@ func redraw(gizmo):
 	
 	gizmo.add_handles(handles, get_material("handles", gizmo), false)
 
+	.redraw(gizmo)
+
 func set_handle(gizmo, index, camera, new_screenspace_point):
 
 	# Get the original view space position just so we have a depth value to work
