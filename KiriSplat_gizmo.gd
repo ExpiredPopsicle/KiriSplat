@@ -87,10 +87,8 @@ func redraw(gizmo):
 	handles.push_back(Vector3(0.0, bottom, 0.0))
 	handles.push_back(Vector3(0.0, 0.0, front))
 	handles.push_back(Vector3(0.0, 0.0, back))
-	
-	gizmo.add_handles(handles, get_material("handles", gizmo), false)
 
-	.redraw(gizmo)
+	gizmo.add_handles(handles, get_material("handles", gizmo), false)
 
 func set_handle(gizmo, index, camera, new_screenspace_point):
 

@@ -330,14 +330,16 @@ func _ready():
 	set_notify_transform(true)
 	set_notify_local_transform(true)
 
-#func _process(_delta):
-#	pass
+func _process(_delta):
+	if lastTransform != get_global_transform():
+		call_deferred("rescan_all_nodes")
+	set_process(false)
 
 func _notification(what):
 	if what == NOTIFICATION_TRANSFORM_CHANGED:
-		call_deferred("rescan_all_nodes")
+		set_process(true)
 	if what == NOTIFICATION_TRANSLATION_CHANGED:
-		call_deferred("rescan_all_nodes")
+		set_process(true)
 
 # FIXME: Ugly hack that lets us rescan in the editor when the transform changes.
 func _get_configuration_warning():
